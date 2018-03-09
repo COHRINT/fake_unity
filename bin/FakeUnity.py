@@ -143,7 +143,7 @@ class FakeUnityServer(object):
             self.statePub.publish(state)
             
             sleep(duration)
-            print self.robot
+            #print self.robot
             
 if __name__ == "__main__":
     server = FakeUnityServer()
