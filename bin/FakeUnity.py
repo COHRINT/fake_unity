@@ -24,6 +24,7 @@ from traadre_msgs.msg import *
 from traadre_msgs.srv import *
 from geometry_msgs.msg import *
 from sensor_msgs.msg import *
+import tf
 
 import sys, pickle
 import numpy as np
@@ -79,7 +80,7 @@ class FakeUnityServer(object):
         
         self.steerSub = rospy.Subscriber('steer', Steering, self.onNewSteer)
         self.joySub = rospy.Subscriber('joy', Joy, self.onJoystick)
-        self.posePub = rospy.Publisher('pose', Pose2D, queue_size=10, latch=True)
+        self.posePub = rospy.Publisher('pose', PoseStamped, queue_size=10, latch=True)
         self.statePub = rospy.Publisher('state', RobotState, queue_size=10, latch=True)
         
         #Dynamics model
@@ -96,8 +97,8 @@ class FakeUnityServer(object):
         return []
     
     def teleport(self, msg):
-        self.robot.posX = msg.dest.x
-        self.robot.posY = msg.dest.y
+        self.robot.posX = msg.dest.position.x
+        self.robot.posY = msg.dest.position.y
         self.robot.velLin = 0.0
         self.robot.velAng = 0.0
         return []
@@ -123,19 +124,28 @@ class FakeUnityServer(object):
         
         while not rospy.is_shutdown():
             self.robot.tick(duration)
-            pos = Pose2D()
-            #pos.header.stamp = rospy.Time.now()
-            pos.x = self.robot.posX
-            pos.y = self.robot.posY
-            pos.theta = self.robot.theta
+            pos = PoseStamped()
+            pos.header.stamp = rospy.Time.now()
+            pos.pose.position.x = self.robot.posX
+            pos.pose.position.y = self.robot.posY
 
+            quat = tf.transformations.quaternion_from_euler(self.robot.theta, 0.0, 0.0, 'rxyz') #from rpy
+            pos.pose.orientation.x = quat[1]
+            pos.pose.orientation.y = quat[2]
+            pos.pose.orientation.z = quat[3]
+            pos.pose.orientation.w = quat[0]
+            
             self.posePub.publish(pos)
 
             state = RobotState()
             state.header.stamp = rospy.Time.now()
-            state.pose.x = self.robot.posX
-            state.pose.y = self.robot.posY
-            state.pose.theta = self.robot.theta
+            state.pose.position.x = self.robot.posX
+            state.pose.position.y = self.robot.posY
+
+            state.pose.orientation.x = quat[1]
+            state.pose.orientation.y = quat[2]
+            state.pose.orientation.z = quat[3]
+            state.pose.orientation.w = quat[0]
             state.vel.linear.x = self.robot.velLin
             state.vel.angular.x = self.robot.velAng
             state.fuel = self.robot.fuelLevel
