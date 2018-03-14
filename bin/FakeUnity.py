@@ -97,8 +97,8 @@ class FakeUnityServer(object):
         return []
     
     def teleport(self, msg):
-        self.robot.posX = msg.dest.position.x
-        self.robot.posY = msg.dest.position.y
+        self.robot.posX = msg.dest.pose.position.x
+        self.robot.posY = msg.dest.pose.position.y
         self.robot.velLin = 0.0
         self.robot.velAng = 0.0
         return []
@@ -108,9 +108,9 @@ class FakeUnityServer(object):
         return
     
     def onJoystick(self, msg):
-        print 'Axes:', msg.axes
-        self.robot.velLin = msg.axes[0]
-        self.robot.velAng = msg.axes[1]
+        #print 'Axes:', msg.axes
+        self.robot.velLin = 10.0*msg.axes[1]
+        self.robot.velAng = msg.axes[0]
         
     def run(self):
         #tick the robot state model if needed
@@ -119,8 +119,9 @@ class FakeUnityServer(object):
         '''
         self.robot.velLin = 0.1
         self.robot.theta=4*np.pi/4
-        self.robot.fuelLevel = 1.0
+        
         '''
+        self.robot.fuelLevel = 100.0
         
         while not rospy.is_shutdown():
             self.robot.tick(duration)
@@ -129,7 +130,7 @@ class FakeUnityServer(object):
             pos.pose.position.x = self.robot.posX
             pos.pose.position.y = self.robot.posY
 
-            quat = tf.transformations.quaternion_from_euler(self.robot.theta, 0.0, 0.0, 'rxyz') #from rpy
+            quat = tf.transformations.quaternion_from_euler(0.0, 0.0, self.robot.theta, 'rxyz') #from rpy
             pos.pose.orientation.x = quat[1]
             pos.pose.orientation.y = quat[2]
             pos.pose.orientation.z = quat[3]
