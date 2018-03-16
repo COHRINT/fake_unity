@@ -82,6 +82,8 @@ class FakeUnityServer(object):
         self.joySub = rospy.Subscriber('joy', Joy, self.onJoystick)
         self.posePub = rospy.Publisher('pose', PoseStamped, queue_size=10, latch=True)
         self.statePub = rospy.Publisher('state', RobotState, queue_size=10, latch=True)
+
+        self.stateSub = rospy.Subscriber('state_cmd', RobotState, self.onStateCmd)
         
         #Dynamics model
         self.robot = RobotSim()
@@ -110,7 +112,21 @@ class FakeUnityServer(object):
     def onJoystick(self, msg):
         #print 'Axes:', msg.axes
         self.robot.velLin = 10.0*msg.axes[1]
-        self.robot.velAng = msg.axes[0]
+        self.robot.velAng = -msg.axes[0]
+
+    def onStateCmd(self, msg):
+        #Use a RobotState message to move the internal model as needed
+        print 'Updating internal state per command'
+
+        self.robot.posX = msg.pose.position.x 
+        self.robot.posY = msg.pose.position.y
+        worldRoll, worldPitch, worldYaw = euler_from_quaternion([msg.pose.orientation.w,
+                                                                 msg.pose.orientation.x,
+                                                                 msg.pose.orientation.y,
+                                                                 msg.pose.orientation.z],'sxyz')
+        self.robot.theta = worldYaw
+        self.robot.fuelLevel = msg.fuelLevel
+
         
     def run(self):
         #tick the robot state model if needed
@@ -125,6 +141,7 @@ class FakeUnityServer(object):
         
         while not rospy.is_shutdown():
             self.robot.tick(duration)
+
             pos = PoseStamped()
             pos.header.stamp = rospy.Time.now()
             pos.pose.position.x = self.robot.posX
