@@ -147,11 +147,11 @@ class FakeUnityServer(object):
             pos.pose.position.x = self.robot.posX
             pos.pose.position.y = self.robot.posY
 
-            quat = tf.transformations.quaternion_from_euler(0.0, 0.0, self.robot.theta, 'rxyz') #from rpy
-            pos.pose.orientation.x = quat[1]
-            pos.pose.orientation.y = quat[2]
-            pos.pose.orientation.z = quat[3]
-            pos.pose.orientation.w = quat[0]
+            quat = tf.transformations.quaternion_from_euler(0.0, 0.0, self.robot.theta, 'sxyz') #from rpy
+            pos.pose.orientation.x = quat[0]
+            pos.pose.orientation.y = quat[1]
+            pos.pose.orientation.z = quat[2]
+            pos.pose.orientation.w = quat[3]
             
             self.posePub.publish(pos)
 
@@ -160,10 +160,10 @@ class FakeUnityServer(object):
             state.pose.position.x = self.robot.posX
             state.pose.position.y = self.robot.posY
 
-            state.pose.orientation.x = quat[1]
-            state.pose.orientation.y = quat[2]
-            state.pose.orientation.z = quat[3]
-            state.pose.orientation.w = quat[0]
+            state.pose.orientation.x = quat[0]
+            state.pose.orientation.y = quat[1]
+            state.pose.orientation.z = quat[2]
+            state.pose.orientation.w = quat[3]
             state.vel.linear.x = self.robot.velLin
             state.vel.angular.x = self.robot.velAng
             state.fuel = self.robot.fuelLevel
